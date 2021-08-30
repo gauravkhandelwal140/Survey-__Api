@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions, viewsets
@@ -7,7 +8,7 @@ from .serializers import *
 
 class SurveyView(viewsets.ViewSet):
     def list(self, request):
-        queryset = Survey.objects.all()
+        queryset = Survey.objects.filter(is_active=True)
         serializer = SurveySerializerR(queryset, many=True)
         return Response(serializer.data)
 
@@ -27,6 +28,15 @@ class SurveyView(viewsets.ViewSet):
         m="Survey add Successfully"
         s=SurveySerializerR(survey)
         return Response({'message':m,'data':s.data})
+
+    def retrieve(self, request, pk=None):
+        queryset = Survey.objects.all()
+        sur = get_object_or_404(queryset, pk=pk)
+        serializer = SurveySerializerRet(sur)
+        return Response(serializer.data)
+
+
+
 
 
 class QuestionView(viewsets.ViewSet):
@@ -52,7 +62,6 @@ class QuestionView(viewsets.ViewSet):
 
 
 class AnswersView(viewsets.ViewSet):
-
     def create(self,request):
         serializer=AnswersSerializer(data=request.data)
         if serializer.is_valid():
@@ -66,6 +75,7 @@ class AnswersView(viewsets.ViewSet):
         m = "Answer Submited Successfully"
         q = AnswersSerializer(answer)
         return Response({'message': m, 'data': q.data})
+
 
 class ReportView(viewsets.ViewSet):
 
@@ -82,6 +92,11 @@ class ReportView(viewsets.ViewSet):
         m = "Report Submited Successfully"
         q = ReportSerializerR(report)
         return Response({'message': m, 'data': q.data})
+
+
+
+
+
 
 
 

@@ -25,3 +25,4 @@ class Report(models.Model):
     created_by=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE)
     text=models.CharField('Report',max_length=20)
+
