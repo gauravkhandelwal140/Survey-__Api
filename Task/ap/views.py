@@ -1,0 +1,92 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import authentication, permissions, viewsets
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view
+from .serializers import *
+
+class SurveyView(viewsets.ViewSet):
+    def list(self, request):
+        queryset = Survey.objects.all()
+        serializer = SurveySerializerR(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self,request):
+        user=request.user
+        serializer=SurveySerializer(data=request.data)
+        if serializer.is_valid():
+            survey_name=serializer.validated_data['survey_name']
+            assign_users=serializer.validated_data['assign_user']
+            survey=Survey.objects.create(survey_name=survey_name,created_by=user)
+            for a in assign_users:
+                survey.assign_user.add(a)
+                survey.save()
+        else:
+            return Response(serializer.errors)
+
+        m="Survey add Successfully"
+        s=SurveySerializerR(survey)
+        return Response({'message':m,'data':s.data})
+
+
+class QuestionView(viewsets.ViewSet):
+    def create(self, request):
+        serializer=QuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            sur=serializer.validated_data['survey']
+            question_name=serializer.validated_data['question_name']
+            print(sur,'--------------------------------')
+            q=sur.question_set.all()
+            if q.count() ==10 :
+                print(q.count())
+                m="Question limited excid"
+                return Response({'message':m})
+            else:
+                qes=Question.objects.create(survey=sur,question_name=question_name)
+        else:
+            return Response(serializer.errors)
+
+        m = "Survey add Successfully"
+        q = QuestionSerializer(qes)
+        return Response({'message': m, 'data': q.data})
+
+
+class AnswersView(viewsets.ViewSet):
+
+    def create(self,request):
+        serializer=AnswersSerializer(data=request.data)
+        if serializer.is_valid():
+            ans = serializer.validated_data['text']
+            question = serializer.validated_data['question']
+            answer=Answers.objects.create(text=ans, question=question)
+            answer.save()
+
+        else:
+            return Response(serializer.errors)
+        m = "Answer Submited Successfully"
+        q = AnswersSerializer(answer)
+        return Response({'message': m, 'data': q.data})
+
+class ReportView(viewsets.ViewSet):
+
+    def create(self,request):
+        user = request.user
+        serializer=ReportSerializer(data=request.data)
+        if serializer.is_valid():
+            report = serializer.validated_data['text']
+            survey = serializer.validated_data['survey']
+            report=Report.objects.create(text=report, survey=survey,created_by=user)
+            report.save()
+        else:
+            return Response(serializer.errors)
+        m = "Report Submited Successfully"
+        q = ReportSerializerR(report)
+        return Response({'message': m, 'data': q.data})
+
+
+
+#
+#         # pass
+# class SurveyView(viewsets.ModelViewSet):
+#     queryset=Survey.objects.all()
+#     serializer_class=SurveySerializerR
