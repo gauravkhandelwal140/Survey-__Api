@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions, viewsets
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from .serializers import *
-
+from .suvey_check import auth_middleware
 class SurveyView(viewsets.ViewSet):
+    @method_decorator(auth_middleware)
     def list(self, request):
         queryset = Survey.objects.filter(is_active=True)
         serializer = SurveySerializerR(queryset, many=True)
@@ -36,16 +38,12 @@ class SurveyView(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-
-
-
 class QuestionView(viewsets.ViewSet):
     def create(self, request):
         serializer=QuestionSerializer(data=request.data)
         if serializer.is_valid():
             sur=serializer.validated_data['survey']
             question_name=serializer.validated_data['question_name']
-            print(sur,'--------------------------------')
             q=sur.question_set.all()
             if q.count() ==10 :
                 print(q.count())
@@ -63,22 +61,20 @@ class QuestionView(viewsets.ViewSet):
 
 class AnswersView(viewsets.ViewSet):
     def create(self,request):
+        user=request.user
         serializer=AnswersSerializer(data=request.data)
         if serializer.is_valid():
             ans = serializer.validated_data['text']
             question = serializer.validated_data['question']
-            answer=Answers.objects.create(text=ans, question=question)
+            answer=Answers.objects.create(text=ans, question=question,user=user)
             answer.save()
-
         else:
             return Response(serializer.errors)
         m = "Answer Submited Successfully"
-        q = AnswersSerializer(answer)
+        q = AnswersSerializerR(answer)
         return Response({'message': m, 'data': q.data})
 
-
 class ReportView(viewsets.ViewSet):
-
     def create(self,request):
         user = request.user
         serializer=ReportSerializer(data=request.data)
@@ -94,14 +90,3 @@ class ReportView(viewsets.ViewSet):
         return Response({'message': m, 'data': q.data})
 
 
-
-
-
-
-
-
-#
-#         # pass
-# class SurveyView(viewsets.ModelViewSet):
-#     queryset=Survey.objects.all()
-#     serializer_class=SurveySerializerR

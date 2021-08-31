@@ -11,6 +11,4 @@ router.register('report',ReportView,basename='report')
 urlpatterns = [
      path('',include(router.urls))
 
-
-
 ]
