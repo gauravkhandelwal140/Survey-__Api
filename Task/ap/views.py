@@ -7,7 +7,9 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from .serializers import *
 from .suvey_check import auth_middleware
+from rest_framework.permissions import IsAuthenticated
 class SurveyView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     @method_decorator(auth_middleware)
     def list(self, request):
         queryset = Survey.objects.filter(is_active=True)
@@ -39,6 +41,7 @@ class SurveyView(viewsets.ViewSet):
 
 
 class QuestionView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     def create(self, request):
         serializer=QuestionSerializer(data=request.data)
         if serializer.is_valid():
@@ -60,6 +63,7 @@ class QuestionView(viewsets.ViewSet):
 
 
 class AnswersView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     def create(self,request):
         user=request.user
         serializer=AnswersSerializer(data=request.data)
@@ -75,6 +79,7 @@ class AnswersView(viewsets.ViewSet):
         return Response({'message': m, 'data': q.data})
 
 class ReportView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     def create(self,request):
         user = request.user
         serializer=ReportSerializer(data=request.data)
